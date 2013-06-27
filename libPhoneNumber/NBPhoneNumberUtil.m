@@ -137,23 +137,27 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
 
 - (int)stringPositionByRegex:(NSString*)sourceString regex:(NSString*)pattern
 {
-    if (![self hasValue:sourceString] || ![self hasValue:pattern]) {
-        return -1;
-    }
-    
-    NSError *error = nil;
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
-    NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-    
-    int foundPosition = -1;
-    
-    if (matches.count > 0)
+    @autoreleasepool
     {
-        NSTextCheckingResult *match = [matches objectAtIndex:0];
-        return match.range.location;
+        if (![self hasValue:sourceString] || ![self hasValue:pattern]) {
+            return -1;
+        }
+   
+        NSError *error = nil;
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
+        NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
+        
+        int foundPosition = -1;
+        
+        if (matches.count > 0)
+        {
+            NSTextCheckingResult *match = [matches objectAtIndex:0];
+            currentPattern = nil;
+            return match.range.location;
+        }
+        currentPattern = nil;
+        return foundPosition;
     }
-    
-    return foundPosition;
 }
 
 
@@ -171,72 +175,91 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
 
 - (NSString*)replaceFirstStringByRegex:(NSString*)sourceString regex:(NSString*)pattern withTemplate:(NSString*)templateString
 {
-    NSString *replacementResult = [sourceString copy];
-    NSError *error = nil;
-    
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
-    NSRange replaceRange = [currentPattern rangeOfFirstMatchInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-    
-    if (replaceRange.location != NSNotFound)
+    @autoreleasepool
     {
-        replacementResult = [currentPattern stringByReplacingMatchesInString:[sourceString mutableCopy] options:0
-                                                                       range:replaceRange
-                                                                withTemplate:templateString];
-    }
-    
-    return replacementResult;
-}
-
-
-- (NSString*)replaceStringByRegex:(NSString*)sourceString regex:(NSString*)pattern withTemplate:(NSString*)templateString
-{
-    NSString *replacementResult = [sourceString copy];
-    NSError *error = nil;
-    
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
-    NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-    
-    if ([matches count] == 1)
-    {
+        NSString *replacementResult = [sourceString copy];
+        NSError *error = nil;
+        
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
         NSRange replaceRange = [currentPattern rangeOfFirstMatchInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-
+        
         if (replaceRange.location != NSNotFound)
         {
             replacementResult = [currentPattern stringByReplacingMatchesInString:[sourceString mutableCopy] options:0
                                                                            range:replaceRange
                                                                     withTemplate:templateString];
         }
+        currentPattern = nil;
         return replacementResult;
     }
-    
-    if ([matches count] > 1)
+}
+
+
+- (NSString*)replaceStringByRegex:(NSString*)sourceString regex:(NSString*)pattern withTemplate:(NSString*)templateString
+{
+    @autoreleasepool
     {
-        replacementResult = [currentPattern stringByReplacingMatchesInString:[replacementResult mutableCopy] options:0
-                                                                       range:NSMakeRange(0, sourceString.length) withTemplate:templateString];
+        NSString *replacementResult = [sourceString copy];
+        NSError *error = nil;    
+    
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
+        NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
+        
+        if ([matches count] == 1)
+        {
+            NSRange replaceRange = [currentPattern rangeOfFirstMatchInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
+
+            if (replaceRange.location != NSNotFound)
+            {
+                replacementResult = [currentPattern stringByReplacingMatchesInString:[sourceString mutableCopy] options:0
+                                                                               range:replaceRange
+                                                                        withTemplate:templateString];
+            }
+            currentPattern = nil;
+            return replacementResult;
+        }
+        
+        if ([matches count] > 1)
+        {
+            replacementResult = [currentPattern stringByReplacingMatchesInString:[replacementResult mutableCopy] options:0
+                                                                           range:NSMakeRange(0, sourceString.length) withTemplate:templateString];
+            currentPattern = nil;
+            return replacementResult;
+        }
+        currentPattern = nil;
         return replacementResult;
     }
-    
-    return replacementResult;
 }
 
 
 - (NSTextCheckingResult*)matcheFirstByRegex:(NSString*)sourceString regex:(NSString*)pattern
 {
-    NSError *error = nil;
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
-    NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-    if ([matches count] > 0)
-        return [matches objectAtIndex:0];
-    return nil;
+    @autoreleasepool
+    {
+        NSError *error = nil;
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
+        NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
+        if ([matches count] > 0)
+        {
+            currentPattern = nil;
+            return [matches objectAtIndex:0];
+        }
+        currentPattern = nil;
+        return nil;
+    }
 }
 
 
 - (NSArray*)matchesByRegex:(NSString*)sourceString regex:(NSString*)pattern
 {
-    NSError *error = nil;
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
-    NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-    return matches;
+    @autoreleasepool
+    {
+        NSError *error = nil;
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
+        NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
+        currentPattern = nil;
+        return matches;
+    }
 }
 
 
@@ -257,19 +280,23 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
 
 - (BOOL)isStartingStringByRegex:(NSString*)sourceString regex:(NSString*)pattern
 {
-    NSError *error = nil;
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
-    NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
-    
-    for (NSTextCheckingResult *match in matches)
+    @autoreleasepool
     {
-        if (match.range.location == 0)
+        NSError *error = nil;
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
+        NSArray *matches = [currentPattern matchesInString:sourceString options:0 range:NSMakeRange(0, sourceString.length)];
+        
+        for (NSTextCheckingResult *match in matches)
         {
-            return YES;
+            if (match.range.location == 0)
+            {
+                currentPattern  = nil;
+                return YES;
+            }
         }
+        currentPattern = nil;
+        return NO;
     }
-    
-    return NO;
 }
 
 
@@ -3518,7 +3545,7 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
     // Attempt to parse the first digits as a national prefix.
     NSString *prefixPattern = [NSString stringWithFormat:@"^(?:%@)", possibleNationalPrefix];
     NSError *error = nil;
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:prefixPattern
+    __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:prefixPattern
                                                                                     options:0 error:&error];
     
     NSArray *prefixMatcher = [currentPattern matchesInString:numberStr options:0 range:NSMakeRange(0, numberLength)];
@@ -3551,6 +3578,7 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
         if ([self hasValue:nationalNumberRule ] && [self matchesEntirely:nationalNumberRule string:numberStr] &&
             [self matchesEntirely:nationalNumberRule string:transformedNumber] == NO)
         {
+            currentPattern = nil;
                 return NO;
         }
         
@@ -3570,8 +3598,10 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
         }
         
         (*number) = transformedNumber;
+        currentPattern = nil;
         return YES;
     }
+    currentPattern = nil;
     return NO;
 }
 
@@ -4253,26 +4283,30 @@ NSString *UNIQUE_INTERNATIONAL_PREFIX_ = @"[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)
  */
 - (BOOL)matchesEntirely:(NSString*)regex string:(NSString*)str
 {
-    if ([regex rangeOfString:@"^"].location == NSNotFound)
+    @autoreleasepool
     {
-        regex = [NSString stringWithFormat:@"^(?:%@)$", regex];
-    }
-    
-    NSError *error = nil;
-    NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:regex options:0 error:&error];
-    NSTextCheckingResult *matchResult = [currentPattern firstMatchInString:str options:0 range:NSMakeRange(0, str.length)];
-    
-    if (matchResult != nil)
-    {
-        NSString *founds = [str substringWithRange:matchResult.range];
-        
-        if ([founds isEqualToString:str])
+        if ([regex rangeOfString:@"^"].location == NSNotFound)
         {
-            return YES;
+            regex = [NSString stringWithFormat:@"^(?:%@)$", regex];
         }
-    }
     
-    return NO;
+        NSError *error = nil;
+        __autoreleasing NSRegularExpression *currentPattern = [NSRegularExpression regularExpressionWithPattern:regex options:0 error:&error];
+        NSTextCheckingResult *matchResult = [currentPattern firstMatchInString:str options:0 range:NSMakeRange(0, str.length)];
+        
+        if (matchResult != nil)
+        {
+            NSString *founds = [str substringWithRange:matchResult.range];
+            
+            if ([founds isEqualToString:str])
+            {
+                currentPattern = nil;
+                return YES;
+            }
+        }
+        currentPattern = nil;
+        return NO;
+    }
 }
 
 
